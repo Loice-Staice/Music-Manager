@@ -1,311 +1,255 @@
-const menuBtn = document.querySelector(".menu-btn"),
-container = document.querySelector(".container");
 
 
-const progressBar = document.querySelector(".bar"),
-progressDot = document.querySelector(".dot"),
-currentTimeEl = document.querySelector(".current-time"),
-DurationEl = document.querySelector(".duration");
+let now_playing=document.querySelector('.now-playing');
+let track_art=document.querySelector('.track-art');
+let track_name=document.querySelector('.track-name');
+let track_artist=document.querySelector('.track-artist');
 
-menuBtn.addEventListener("click", () => {
-container.classList.toggle("active");
-});
 
-const songs = [
+
+
+let playpause_btn =document.querySelector('.playpause-track');
+let next_btn=document.querySelector('.next-track');
+let prev_btn =document.querySelector('.prev-track');
+
+
+let seek_slider = document.querySelector('.seek_slider');
+let volume_slider=document.querySelector('.volume_slider');
+let curr_time =document.querySelector('.current-time')
+let total_duration=document.querySelector('.total-duration');
+let wave=document.getElementById('wave');
+let randomIcon=document.querySelector('.fa-random');
+let curr_track =document.createElement('audio');
+
+
+
+
+let track_index =0;
+let isPlaying=false;
+let isRandom= false;
+let updateTimer;
+
+
+const music_list=[
 {
-  title: "Song 1",
-  artist: "Artist 1",
-  img_src: "media/celine.webp",
-  src: "media/anewbeginning.mp3"
+   img: 'media/celine.webp',
+   name: 'Falling Down',
+   artist: 'Wild Cards',
+   music: 'media/cute.mp3'
 },
+
+
 {
-  title: "Song 2",
-  artist: "Artist 2",
-  img_src: "media/Skylar.webp",
-  src: "media/cute.mp3"
+   img: 'media/Skylar.webp',
+   name: 'Faded',
+   artist: 'Alan Walker',
+   music: 'media/elevate.mp3'
+},
+
+
+
+
+{
+   img: 'media/data.jpg',
+   name: 'Rather Be',
+   artist: 'Clean Bandit',
+   music: 'media/happiness.mp3'
 }
+
+
 ];
 
 
-let audio = new Audio();
-let playing = false;
-let currentSong = 0;
-let shuffle = false;
-let repeat = false;
-let favourites = [];
+loadTrack(track_index);
 
 
-// Initialize audio player
-const init = () => {
-updatePlaylist(songs);
-loadSong();
-};
+function loadTrack(track_index){
+   clearInterval(updateTimer);
+   reset();
 
 
-// Function to play a song
-const playSong = (songIndex) => {
-if (songIndex >= 0 && songIndex < songs.length) {
-  const song = songs[songIndex];
-  audio.src = song.src;
-  audio.play();
-  console.log(`Now playing: ${song.title} by ${song.artist}`);
-} else {
-  console.error("Invalid song index.");
-}
-};
-
-// Example usage
-playSong(0); // Play the first song
+   curr_track.src = music_list[track_index].music;
+   curr_track.load();
 
 
-// Update the playlist
-const updatePlaylist = (songs) => {
-playlistContainer.innerHTML = "";
-
-
-songs.forEach((song, index) => {
-  const { title, src } = song;
-  const isFavourite = favourites.includes(index);
+   track_art.style.backgroundImage="url("+ music_list[track_index].img+")";
+   track_name.textContent=music_list[track_index].name;
+   track_artist.textContent=music_list[track_index].artist;
+   now_playing.textContent="Playing music" + (track_index + 1) + " of" + music_list.length;
 
 
 
 
-  const tr = document.createElement("tr");
-  tr.classList.add("song");
-  tr.innerHTML = `
-  <td class="no">
-  <h5>${index + 1}</h5>
-</td>
-<td class="title">
-  <h6>${title}</h6>
-</td>
-
-<td class="length">
-  <h5>2:03</h5>
-</td>
-<td>
- <i class="fas fa-heart ${isFavourite ? "active" : ""}"></i>
-</td>`;
+   updateTimer=setInterval(setUpdate, 1000);
 
 
-  tr.addEventListener("click", (e) => {
-    currentSong = index;
-    loadSong(currentSong);
-    audio.play();
-    container.classList.remove("active");
-    playPauseBtn.classList.replace("fa-play", "fa-pause");
-    playing = true;
-  });
-
-  const audioForDuration = new Audio(`data/${src}`);
-  audioForDuration.addEventListener("loadedmetadata", () => {
-    if (e.target.classList.contains("fa-heart")) {
-      addToFavourites(index);
-
-
-
-
-      e.target.classList.toggle("active");
-
-      return;
-    }
-
-
-    let songDuration = formatTime(audioForDuration.duration);
-    tr.querySelector(".length h5").innerText = songDuration;
-  });
-
-
-  playlistContainer.appendChild(tr);
-});
-};
-
-
-// Format time
-const formatTime = (time) => {
-let minutes = Math.floor(time / 60);
-let seconds = Math.floor(time % 60);
-
-
-seconds = seconds < 10 ? `0${seconds}` : seconds;
-return `${minutes}: ${seconds}`;
-};
-
-// Load current song
-const loadSong = (num) => {
-const song = songs[num];
-audio.src = `data/${song.src}`;
-infoWrapper.innerHTML = `
-  <h2>${song.title}</h2>
-  <h3>${song.artist}</h3>
-`;
-coverImage.style.backgroundImage = `url(media/cover${song.img_src})`;
-currentSongTitle.innerHTML = song.title;
-
-
-// If current song is in favourites, highlight it
-if (favourites.includes(num)) {
-  currentFavourite.classList.add("active");
-} else {
-  currentFavourite.classList.remove("active");
-}
-};
-
-// Play/Pause functionality
-const playPauseBtn = document.querySelector("#playpause");
-
-playPauseBtn.addEventListener("click", () => {
-if (playing) {
-  audio.pause();
-  playPauseBtn.classList.replace("fa-pause", "fa-play");
-  playing = false;
-} else {
-  audio.play();
-  playPauseBtn.classList.replace("fa-play", "fa-pause");
-  playing = true;
-}
-});
-
-
-// Add to favourites
-const addToFavourites = (index) => {
-if (favourites.includes(index)) {
-  favourites = favourites.filter((item) => item !== index);
-  currentFavourite.classList.remove("active");
-} else {
-  favourites.push(index);
-
-
-  if (index === currentSong) {
-    currentFavourite.classList.add("active");
-  }
+   curr_track.addEventListener('ended', nextTrack);
+   random_bg_color();
 }
 
 
-updatePlaylist(songs);
-};
-
-// Add to favourites when clicked on heart
-currentFavourite.addEventListener("click", () => {
-addToFavourites(currentSong);
-});
 
 
-// Shuffle functionality
-const shuffleBtn = document.querySelector("#shuffle");
-
-const shuffleSongs = () => {
-shuffle = !shuffle;
-shuffleBtn.classList.toggle("active");
-};
+function  random_bg_color(){
+   let hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d', 'e'];
+   let a;
 
 
-shuffleBtn.addEventListener("click", shuffleSongs);
+   function populate (a){
+       for(let i=0; i<6; i++){
+           let X=Math.round(Math.random()*14);
+           let y = hex[x];
+           a +=y;
+   }
 
 
-// If shuffle is true, shuffle songs when playing next or prev
-const shuffleFunc = () => {
-if (shuffle) {
-  let newIndex;
-  do {
-    newIndex = Math.floor(Math.random() * songs.length);
-  } while (newIndex === currentSong);
-  currentSong = newIndex;
+   return a;
 }
-};
-
-// Next song functionality
-const nextBtn = document.querySelector("#next");
 
 
-nextBtn.addEventListener("click", () => {
-shuffleFunc();
-currentSong++;
-if (currentSong >= songs.length) {
-  currentSong = 0;
+
+
+let Color1 = populate('#');
+let Color2 = populate('#');
+var angle ='to right';
+
+
+
+
+let gradient ='linear-gradient(' + angle + ',' + Color1 + ',' + Color2 + ")";
+document.body.style.background=gradient;
 }
-loadSong(currentSong);
-audio.play();
-container.classList.remove("active");
-playPauseBtn.classList.replace("fa-play", "fa-pause");
-playing = true;
-});
 
-// Repeat functionality
-const repeatBtn = document.querySelector("#repeat");
 
-const repeatSong = () => {
-if (repeat === 0) {
-  repeat = 1;
-  repeatBtn.classList.add("active");
-} else if (repeat === 1) {
-  repeat = 2;
-  repeatBtn.classList.add("active");
-} else {
-  repeat = 0;
-  repeatBtn.classList.remove("active");
+function reset(){
+   curr_track.textContent="00:00";
+   total_duration.textContent="00:00";
+   seek_slider.value=0;
 }
-};
 
-repeatBtn.addEventListener("click", repeatSong);
 
-// On audio end
-audio.addEventListener("ended", () => {
-if (repeat === 1) {
-  audio.play();
-} else if (repeat === 2) {
-  nextBtn.click();
-  audio.play();
-} else {
-  nextBtn.click();
+function randomTrack(){
+   isRandom ? pauseRandom() : playRandom();
 }
-});
-
-// Progress bar
-const progress = () => {
-const { duration, currentTime } = audio;
-
-currentTimeEl.innerHTML = formatTime(currentTime);
-DurationEl.innerHTML = formatTime(duration);
-
-const progressPercentage = (currentTime / duration) * 100;
-progressDot.style.left = `${progressPercentage}%`;
-};
-
-audio.addEventListener("timeupdate", progress);
 
 
-// Change progress when clicked on bar
-const setProgress = (e) => {
-const width = this.clientWidth;
-const clickX = e.offsetX;
-const duration = audio.duration;
-audio.currentTime = (clickX / width) * duration;
-};
+function playRandom(){
+   isRandom=true;
+   randomIcon.classList.add('randomActive');
+}
 
 
-progressBar.addEventListener("click", setProgress);
+function pauseRandom(){
+   isRandom=false;
+   randomIcon.classList.remove('randomActive');
+}
 
 
 
 
-init();
+function repeatTrack(){
+   let current_index = track_index;
+   loadTrack(current_index);
+   playTrack();
+}
+
+
+function playpauseTrack(){
+   isPlaying ? playpauseTrack() : playTrack();
+}
+
+
+function playTrack(){
+   curr_track.play();
+   isPlaying=true;
+   track_art.classList.add('rotate');
+   wave.classList.add('loader');
+   playpause_btn.innerHTML = '<i class="fa fa-pause-circle fa-5x"></i>';
+}
+
+
+function pauseTrack(){
+   curr_track.pause();
+   isPlaying=false;
+   track_art.classList.remove('rotate');
+   wave.classList.remove('loader');
+   playpause_btn.innerHTML = '<i class="fa fa-play-circle fa-5x"></i>';
+}
 
 
 
 
+function nextTrack(){
+   if(track_index < music_list.length -1 && isRandom ===false){
+       track_index += 1;
+       }else if (track_index < music_list.length -1 && isRandom === true){
+           let random_index = Number.parseInt(Math.random() * music_list.length);
+           track_index = random_index;
+       }
+       else{
+           track_index = 0;
+       }
+       loadTrack(track_index);
+       playTrack();
+
+
+}
+
+
+function prevTrack(){
+   if(track_index > 0){
+       track_index -= 1;
+
+
+}  else{
+   track_index=music_list.length -1;
+}
+loadTrack(track_index);
+playTrack();
+}
 
 
 
 
+function seekTo(){
+   let seekto = curr_track.duration * (seek_slider.value / 100);
+   curr_track.currentTime=seekto;
+}
 
 
 
 
+function setVolume(){
+   curr_track.volume = volume_slider.value / 100;
+}
 
 
 
 
+function setUpdate(){
+   let seekPosition = 0;
+   if(!isNaN(curr_track.duration)){
+       seekPosition = curr_track.currentTime * (100 / curr_track.duration);
+       seek_slider.value = seekPosition;
 
 
 
+
+       let currentMinutes=Math.floor(curr_track.currentTime / 60);
+       let currentSeconds = Math.floor( curr_track.currentTime - currentMinutes * 60);
+       let durationMinutes = Math.floor(curr_track.duration / 60);
+       let durationSeconds = Math.floor(curr_track.duration - durationMinutes * 60);  
+
+
+       if(currentSeconds<10){currentSeconds="0" + currentSeconds;}
+       if(durationSeconds < 10) { durationSeconds = "0" + durationSeconds}
+       if(currentMinutes < 10){ currentMinutes="0" + currentMinutes;}
+       if( durationMinutes< 10){ durationMinutes="0" + durationMinutes;}
+
+
+
+
+       curr_time.textContent=currentMinutes + ":" + currentSeconds;
+       total_duration.textContent = durationMinutes + ":"+ durationMinutes;
+}
+}
