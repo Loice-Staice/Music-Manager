@@ -98,7 +98,7 @@ function  random_bg_color(){
    function populate (a){
        for(let i=0; i<6; i++){
            let X=Math.round(Math.random()*14);
-           let y = hex[x];
+           let y = hex[X];
            a +=y;
    }
 
